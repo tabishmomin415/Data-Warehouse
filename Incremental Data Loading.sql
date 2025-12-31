@@ -5,11 +5,11 @@
 
 -- COMMAND ----------
 
-CREATE DATABASE sales;
+CREATE DATABASE sales_scd;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales.Orders (
+CREATE OR REPLACE TABLE sales_scd.Orders (
     OrderID INT,
     OrderDate DATE,
     CustomerID INT,
@@ -26,10 +26,9 @@ CREATE OR REPLACE TABLE sales.Orders (
     TotalAmount DECIMAL(10,2)
 );
 
-
 -- COMMAND ----------
 
-INSERT INTO sales.Orders VALUES 
+INSERT INTO sales_scd.Orders VALUES 
 (1, '2024-02-01', 101, 'Alice Johnson', 'alice@example.com', 201, 'Laptop', 'Electronics', 301, 'North America', 'USA', 2, 800.00, 1600.00),
 (2, '2024-02-02', 102, 'Bob Smith', 'bob@example.com', 202, 'Smartphone', 'Electronics', 302, 'Europe', 'Germany', 1, 500.00, 500.00),
 (3, '2024-02-03', 103, 'Charlie Brown', 'charlie@example.com', 203, 'Tablet', 'Electronics', 303, 'Asia', 'India', 3, 300.00, 900.00),
@@ -44,7 +43,7 @@ INSERT INTO sales.Orders VALUES
 
 -- COMMAND ----------
 
-SELECT * FROM sales.orders;
+SELECT * FROM sales_scd.orders;
 
 -- COMMAND ----------
 
@@ -53,7 +52,7 @@ SELECT * FROM sales.orders;
 
 -- COMMAND ----------
 
-CREATE DATABASE salesDWH;
+CREATE DATABASE orderDWH;
 
 -- COMMAND ----------
 
@@ -63,9 +62,9 @@ CREATE DATABASE salesDWH;
 -- COMMAND ----------
 
 -- Initial Load
-CREATE OR REPLACE TABLE salesDWH.stg_sales 
+CREATE OR REPLACE TABLE orderDWH.stg_sales 
 AS 
-SELECT * FROM sales.orders;
+SELECT * FROM sales_scd.orders;
 
 -- COMMAND ----------
 
@@ -83,9 +82,9 @@ SELECT * FROM salesDWH.stg_sales
 
 -- COMMAND ----------
 
-CREATE VIEW salesDWH.trans_sales
+CREATE VIEW orderDWH.trans_sales
 AS
-SELECT * FROM salesDWH.stg_sales WHERE Quantity IS NOT NULL;
+SELECT * FROM orderDWH.stg_sales WHERE Quantity IS NOT NULL;
 
 -- COMMAND ----------
 
@@ -94,7 +93,7 @@ SELECT * FROM salesDWH.stg_sales WHERE Quantity IS NOT NULL;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW salesDWH.view_DimCustomers
+CREATE OR REPLACE VIEW orderDWH.view_DimCustomers
 AS 
 SELECT T.*, row_number() over(ORDER BY T.CustomerID) as DimCustomersKey 
 FROM (
@@ -102,10 +101,12 @@ FROM (
     DISTINCT(CustomerID) as CustomerID,
     CustomerName,
     CustomerEmail
-  FROM salesDWH.trans_sales
+  FROM orderDWH.trans_sales
 ) AS T;
 
-CREATE OR REPLACE TABLE salesDWH.DimCustomers (
+-- COMMAND ----------
+
+CREATE OR REPLACE TABLE orderdwh.DimCustomers (
     CustomerID INT,
     CustomerName VARCHAR(100),
     CustomerEmail VARCHAR(100),
@@ -114,8 +115,8 @@ CREATE OR REPLACE TABLE salesDWH.DimCustomers (
 
 -- COMMAND ----------
 
-INSERT INTO salesdwh.DimCustomers 
-SELECT * FROM salesdwh.view_DimCustomers;
+INSERT INTO orderdwh.DimCustomers 
+SELECT * FROM orderdwh.view_DimCustomers;
 
 -- COMMAND ----------
 
@@ -124,4 +125,4 @@ SELECT * FROM salesdwh.view_DimCustomers;
 
 -- COMMAND ----------
 
-SELECT * FROM salesdwh.trans_sales;
+SELECT * FROM orderdwh.DimCustomers;
